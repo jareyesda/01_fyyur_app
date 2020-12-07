@@ -1,0 +1,104 @@
+@app.route('/venues/<int:venue_id>')
+def show_venue(venue_id):
+  # shows the venue page with the given venue_id
+  # TODO: replace with real venue data from the venues table, using venue_id
+  venue = Venue.query.filter_by(id=venue_id).first_or_404()
+  data = {
+    "id": venue.id,
+    "name": venue.name,
+    "genres": venue.genres,
+    "address": venue.address,
+    "city": venue.city,
+    "state": venue.state,
+    "phone": venue.phone,
+    #"website": venue.website,
+    "facebook_link": venue.facebook_link,
+    #"seeking_talent": 'FILL',
+    #"seeking_description": 'FILL',
+    "image_link": venue.image_link,
+    #"past_shows": [{
+      # -------> Will probably use a filter with a conditional statement
+     # "artist_id": 4,
+     # "artist_name": "Guns N Petals",
+     # "artist_image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
+     # "start_time": "2019-05-21T21:30:00.000Z"
+    #}],
+    #"upcoming_shows": [],
+    #"past_shows_count": 1,
+    #"upcoming_shows_count": 0,
+
+  }
+
+
+"id": 4,
+    "name": "Guns N Petals",
+    "genres": ["Rock n Roll"],
+    "city": "San Francisco",
+    "state": "CA",
+    "phone": "326-123-5000",
+    "website": "https://www.gunsnpetalsband.com",
+    "facebook_link": "https://www.facebook.com/GunsNPetals",
+    "seeking_venue": True,
+    "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
+    
+
+@app.route('/artists/create', methods=['POST'])
+def create_artist_submission():
+  error = False
+  form = ArtistForm()
+  artist = Artist()
+
+  artist.name = request.form['name']
+  artist.city = request.form['city']
+  artist.state = request.form['state']
+  artist.phone = request.form['phone']
+  tmp_genres = request.form.getlist('genres')
+  artist.genres = ','.join(tmp_genres)
+  artist.facebook_link = request.form['facebook_link']
+  try:
+    db.session.add(artist)
+    db.session.commit()
+    flash('Artist ' + request.form['name'] + ' was successfully listed!')
+  except:
+    db.session.rollback()
+    print(sys.exc_info())
+    flash('An error occured. Artist ' + request.form['name'] + ' Could not be listed!')
+  finally:
+    db.session.close()
+  
+  return render_template('pages/home.html')
+
+
+
+
+
+
+
+@app.route('/artists')
+def artists():
+  # TODO: replace with real data returned from querying the database
+  artists = db.session.query(Artist.name)
+  data = []
+  for artist in artists:
+    data.append({
+      'name': artist.name
+    })
+  return render_template('pages/artists.html', artists=data)
+
+def shows():
+  # displays list of shows at /shows
+  # TODO: replace with real venues data.
+  #       num_shows should be aggregated based on number of upcoming shows per venue.'
+  shows = Show.query.order_by(Show.start_time.desc()).all()
+  data = []
+  for show in shows:
+    venue = Venue.query.filter_by(id=show.venue_id).first_or_404()
+    artist = Artist.query.filter_by(id=show.artist_id).first_or_404()
+    data.extend([{
+      "venue_id": venue.id,
+      "venue_name": venue.name,
+      "artist_id": artist.id,
+      "artist_name": artist.name,
+      "artist_image_link": artist.image_link,
+      "start_time": show.start_time.strftime("%m/%d/%Y, %H:%M")
+    }])
